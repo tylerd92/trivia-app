@@ -1,4 +1,11 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(npm ls *)",
+      "Bash(npx expo lint)",
+      "Bash(npx tsc --noEmit)"
+    ]
+  },
   "enabledPlugins": {
     "expo@claude-plugins-official": true
   }
