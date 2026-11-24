@@ -6,6 +6,6 @@ export type Question = {
 
 export type RootStackParamList = {
   Home: undefined;
-  Quiz: undefined;
+  Trivia: undefined;
   Results: { score: number; totalQuestions: number };
 };

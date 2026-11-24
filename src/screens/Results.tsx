@@ -28,7 +28,7 @@ export default function Results({ route, navigation }: Props) {
 
       <Pressable
         style={styles.button}
-        onPress={() => navigation.replace("Quiz")}
+        onPress={() => navigation.replace("Trivia")}
       >
         <Text style={styles.buttonText}>Play Again</Text>
       </Pressable>

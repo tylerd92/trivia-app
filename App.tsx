@@ -2,7 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
 import Home from "./src/screens/Home";
-import Quiz from "./src/screens/Quiz";
+import Trivia from "./src/screens/Trivia";
 import Results from "./src/screens/Results";
 import type { RootStackParamList } from "./src/types";
 
@@ -13,8 +13,12 @@ export default function App() {
     <>
       <NavigationContainer>
         <Stack.Navigator>
-          <Stack.Screen name='Home' component={Home} />
-          <Stack.Screen name='Quiz' component={Quiz} />
+          <Stack.Screen
+            name='Home'
+            component={Home}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen name='Trivia' component={Trivia} />
           <Stack.Screen name='Results' component={Results} />
         </Stack.Navigator>
         <StatusBar style='auto' />

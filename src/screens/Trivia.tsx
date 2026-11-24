@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { StyleSheet, View, Text, Pressable } from "react-native";
+import { StyleSheet, View, Text, Pressable, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../types";
 import { questions } from "../data/questions";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Quiz">;
+type Props = NativeStackScreenProps<RootStackParamList, "Trivia">;
 
-export default function Quiz({ navigation }: Props) {
+export default function Trivia({ navigation }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [score, setScore] = useState(0);
@@ -36,96 +37,174 @@ export default function Quiz({ navigation }: Props) {
     setSelectedOption(null);
   }
 
-  function getOptionStyle(option: string) {
-    if (!hasAnswered) return styles.option;
-    if (option === currentQuestion.answer) return [styles.option, styles.correct];
-    if (option === selectedOption) return [styles.option, styles.incorrect];
-    return [styles.option, styles.dimmed];
+  function getOptionState(option: string) {
+    if (!hasAnswered) return null;
+    if (option === currentQuestion.answer) return "correct";
+    if (option === selectedOption) return "incorrect";
+    return "dimmed";
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.progress}>
-        Question {currentIndex + 1} of {questions.length}
-      </Text>
-      <Text style={styles.question}>{currentQuestion.question}</Text>
+    <SafeAreaView style={styles.safe} edges={["bottom"]}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.progress}>
+          Question {currentIndex + 1} of {questions.length}
+        </Text>
+        <Text style={styles.question} accessibilityRole="header">
+          {currentQuestion.question}
+        </Text>
 
-      <View style={styles.options}>
-        {currentQuestion.options.map((option) => (
-          <Pressable
-            key={option}
-            style={getOptionStyle(option)}
-            onPress={() => handleSelect(option)}
-            disabled={hasAnswered}
-          >
-            <Text style={styles.optionText}>{option}</Text>
-          </Pressable>
-        ))}
-      </View>
+        <View style={styles.options}>
+          {currentQuestion.options.map((option) => {
+            const state = getOptionState(option);
+            return (
+              <Pressable
+                key={option}
+                style={({ pressed }) => [
+                  styles.option,
+                  pressed && styles.pressed,
+                  state && styles[state],
+                ]}
+                onPress={() => handleSelect(option)}
+                disabled={hasAnswered}
+                accessibilityRole="button"
+                accessibilityState={{
+                  disabled: hasAnswered,
+                  selected: option === selectedOption,
+                }}
+              >
+                <Text style={styles.optionText}>{option}</Text>
+                {/* text label so right/wrong isn't conveyed by color alone */}
+                {state === "correct" && <Text style={styles.correctTag}>Correct</Text>}
+                {state === "incorrect" && <Text style={styles.incorrectTag}>Your answer</Text>}
+              </Pressable>
+            );
+          })}
+        </View>
+      </ScrollView>
 
-      {hasAnswered && (
-        <Pressable style={styles.nextButton} onPress={handleNext}>
+      {/* footer always reserves its space, so options don't jump when Next appears */}
+      <View style={styles.footer}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.nextButton,
+            !hasAnswered && styles.hidden,
+            pressed && styles.nextPressed,
+          ]}
+          onPress={handleNext}
+          disabled={!hasAnswered}
+          accessibilityElementsHidden={!hasAnswered}
+          importantForAccessibility={hasAnswered ? "auto" : "no-hide-descendants"}
+        >
           <Text style={styles.nextButtonText}>
             {isLastQuestion ? "See Results" : "Next Question"}
           </Text>
         </Pressable>
-      )}
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
     backgroundColor: "#fff",
-    padding: 24,
-    justifyContent: "center",
+  },
+  content: {
+    flexGrow: 1,
+    width: "100%",
+    maxWidth: 640, // keeps line length comfortable on tablets
+    alignSelf: "center",
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 24,
   },
   progress: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 8,
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#5C5C5C",
+    fontVariant: ["tabular-nums"],
+    marginBottom: 12,
   },
   question: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 24,
+    fontSize: 28,
+    lineHeight: 36,
+    fontWeight: "700",
+    color: "#111",
+    letterSpacing: -0.3,
+    marginBottom: 32,
   },
   options: {
     gap: 12,
   },
   option: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    minHeight: 60,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1.5,
+    borderColor: "#D4D4D4",
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    backgroundColor: "#fff",
+  },
+  pressed: {
+    backgroundColor: "#F2F2F2",
   },
   correct: {
-    backgroundColor: "#d4edda",
-    borderColor: "#28a745",
+    backgroundColor: "#E6F4EA",
+    borderColor: "#1E8E3E",
   },
   incorrect: {
-    backgroundColor: "#f8d7da",
-    borderColor: "#dc3545",
+    backgroundColor: "#FCE8E8",
+    borderColor: "#C5221F",
   },
   dimmed: {
-    opacity: 0.5,
+    opacity: 0.55,
   },
   optionText: {
-    fontSize: 16,
+    flex: 1,
+    fontSize: 19,
+    lineHeight: 26,
+    fontWeight: "500",
+    color: "#111",
+  },
+  correctTag: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#137333",
+  },
+  incorrectTag: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#A50E0E",
+  },
+  footer: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 16,
+    width: "100%",
+    maxWidth: 640,
+    alignSelf: "center",
   },
   nextButton: {
     backgroundColor: "#007AFF",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 6,
-    marginTop: 24,
+    minHeight: 54,
+    borderRadius: 12,
     alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  nextPressed: {
+    opacity: 0.85,
+  },
+  hidden: {
+    opacity: 0,
   },
   nextButtonText: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 17,
+    fontWeight: "700",
   },
 });
